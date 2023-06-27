@@ -1,0 +1,87 @@
+
+adivina :: Int -> IO ()
+adivina num = do
+   putStrLn "Elige un numero:"
+   guess <- getLine
+   if (read guess) < num
+     then do putStrLn ("El numero buscado es mayor que " ++ guess ++ " elige otro")
+             adivina num
+     else if (read guess) > num
+            then do putStrLn ("El numero buscado es menor que " ++ guess ++ " elige otro")
+                    adivina num
+            else putStrLn "Acertaste"
+
+
+
+type Fila = [Float]
+type Matriz = [Fila]
+
+getInt :: IO Int
+getInt = do line <- getLine
+            return (read line::Int)
+
+getFloat :: IO Float
+getFloat = do line <- getLine
+              return (read line::Float)
+
+getFila :: Int -> Int -> Int -> Fila -> IO Fila
+getFila n m cont f =
+     if cont < m then do putStr (show (n,cont) ++ ": ")--putStr ("a" ++ show n ++ show cont ++ ": ")
+                         dato <- getFloat
+                         getFila n m (cont+1) (f ++ [dato])
+                 else return f
+
+completaMatriz :: Int -> Int -> Int -> Matriz -> IO Matriz
+completaMatriz n m cont mat = 
+    if cont < n then do putStrLn ("Fila " ++ show cont ++ ":")
+                        fila <- getFila cont m 0 []
+                        completaMatriz n m (cont+1) (mat ++ [fila])
+                else return mat
+
+getMatriz :: IO Matriz
+getMatriz = 
+    do putStrLn "Numero de filas: "
+       n <- getInt
+       putStrLn "Numero de columnas: "
+       m <- getInt
+       completaMatriz n m 0 []
+
+
+dibujaFila :: Fila -> IO()
+dibujaFila [] = putStrLn ""
+dibujaFila (x:xs) = do putStr(show x ++ "  ")
+                       dibujaFila xs
+
+dibujaMatriz :: Matriz -> IO()
+dibujaMatriz [] = putStr ""
+dibujaMatriz (f:fs) = do dibujaFila f
+                         dibujaMatriz fs
+
+leeYdibujaMatriz :: IO()
+leeYdibujaMatriz =
+   do mat <- getMatriz
+      dibujaMatriz mat
+
+
+formatea :: String -> String -> Int -> IO ()
+formatea fileIn fileOut n = do
+  strfile  <-  readFile fileIn
+  ls <- return (lines strfile)
+  lineas <- return (map (dropWhile (== ' ')) ls)
+  writeFile fileOut (unlines $ map (formatLn n) lineas)
+
+
+formatLn :: Int -> String -> String
+formatLn n xs 
+  | long  > n || length palLn <= 1 =  xs
+  | otherwise = espacia  palLn (div (n - (long - blancos))  m)
+      where long = length xs
+            palLn = words xs
+            m = length palLn - 1
+            blancos = length (filter (== ' ') xs)
+
+espacia :: [String] -> Int -> String
+espacia  []  _ = ""
+espacia (p:ps) m  = p ++ (replicate m ' ') ++ espacia ps m
+
+
